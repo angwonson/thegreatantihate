@@ -1,4 +1,4 @@
-package com.example.thegreatantihate
+package com.thegreatantihate.thegreatantihate
 
 import io.flutter.embedding.android.FlutterActivity
 
