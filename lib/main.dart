@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,11 +33,28 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _mostrecent = DateTime.now().millisecondsSinceEpoch;
+  int _daysSince = 0;
+  int _hoursSince = 0;
+  int _minutesSince = 0;
+  int _secondsSince = 0;
 
   @override
   void initState() {
     super.initState();
     _loadMostrecent();
+    Timer.periodic(Duration(seconds: 10), (Timer t) => _calculateDeltas());
+  }
+
+  void _calculateDeltas() async {
+    var now = DateTime.now();
+    var date = DateTime.fromMillisecondsSinceEpoch(_mostrecent);
+    var diff = now.difference(date);
+    setState(() {
+      _daysSince = diff.inDays;
+      _hoursSince = diff.inHours;
+      _minutesSince = diff.inMinutes;
+      _secondsSince = diff.inSeconds;
+    });
   }
 
   void _loadMostrecent() async {
@@ -43,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _mostrecent = (prefs.getInt('mostrecent') ?? DateTime.now().millisecondsSinceEpoch);
     });
+    _calculateDeltas();
   }
 
   void _resetMostRecent() async {
@@ -51,6 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _mostrecent = DateTime.now().millisecondsSinceEpoch;
       prefs.setInt('mostrecent', _mostrecent);
     });
+    _calculateDeltas();
   }
 
   @override
@@ -64,10 +85,34 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'You have gone X many minutes without using the H word:',
+              'You have gone this long without using the H word:',
+            ),
+            const Text(
+              'Days',
             ),
             Text(
-              '$_mostrecent',
+              '$_daysSince',
+              style: Theme.of(context).textTheme.headline4,
+            ),
+            const Text(
+              'Hours',
+            ),
+            Text(
+              '$_hoursSince',
+              style: Theme.of(context).textTheme.headline4,
+            ),
+            const Text(
+              'Minutes',
+            ),
+            Text(
+              '$_minutesSince',
+              style: Theme.of(context).textTheme.headline4,
+            ),
+            const Text(
+              'Seconds',
+            ),
+            Text(
+              '$_secondsSince',
               style: Theme.of(context).textTheme.headline4,
             ),
           ],
