@@ -44,7 +44,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _mostrecent = _prefs.then((SharedPreferences prefs) {
-      return prefs.getInt('mostrecent') ?? DateTime.now().millisecondsSinceEpoch;
+      int newOrCurrentValue = prefs.getInt('mostrecent') ?? DateTime.now().millisecondsSinceEpoch;
+      prefs.setInt('mostrecent', newOrCurrentValue);
+      return newOrCurrentValue;
     });
     _calculateDeltas();
     Timer.periodic(const Duration(seconds: 10), (Timer t) => _calculateDeltas());
