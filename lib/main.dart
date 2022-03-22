@@ -32,7 +32,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _mostrecent = DateTime.now().millisecondsSinceEpoch;
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  late Future<int> _mostrecent;
+
   int _daysSince = 0;
   int _hoursSince = 0;
   int _minutesSince = 0;
@@ -41,13 +43,16 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _loadMostrecent();
-    Timer.periodic(Duration(seconds: 10), (Timer t) => _calculateDeltas());
+    _mostrecent = _prefs.then((SharedPreferences prefs) {
+      return prefs.getInt('mostrecent') ?? DateTime.now().millisecondsSinceEpoch;
+    });
+    _calculateDeltas();
+    Timer.periodic(const Duration(seconds: 10), (Timer t) => _calculateDeltas());
   }
 
   void _calculateDeltas() async {
     var now = DateTime.now();
-    var date = DateTime.fromMillisecondsSinceEpoch(_mostrecent);
+    var date = DateTime.fromMillisecondsSinceEpoch(await _mostrecent);
     var diff = now.difference(date);
     setState(() {
       _daysSince = diff.inDays;
@@ -57,20 +62,16 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _loadMostrecent() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _mostrecent = (prefs.getInt('mostrecent') ?? DateTime.now().millisecondsSinceEpoch);
-    });
-    _calculateDeltas();
-  }
-
   void _resetMostRecent() async {
-    final prefs = await SharedPreferences.getInstance();
+    final SharedPreferences prefs = await _prefs;
+    final int mostrecentL = DateTime.now().millisecondsSinceEpoch;
+
     setState(() {
-      _mostrecent = DateTime.now().millisecondsSinceEpoch;
-      prefs.setInt('mostrecent', _mostrecent);
+      _mostrecent = prefs.setInt('mostrecent', mostrecentL).then((bool success) {
+        return mostrecentL;
+      });
     });
+
     _calculateDeltas();
   }
 
@@ -122,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _resetMostRecent,
         tooltip: 'Reset',
         child: const Icon(Icons.reset_tv),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
